@@ -1,7 +1,6 @@
 import os
 import base64
 import json
-import tempfile
 from datetime import datetime
 
 import httpx
@@ -10,6 +9,7 @@ from firebase_admin import credentials, auth
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 load_dotenv()
 
@@ -25,6 +25,11 @@ else:
     cred = credentials.Certificate("firebase-service-account.json")
 
 firebase_admin.initialize_app(cred)
+
+# MongoDB connection
+mongo = MongoClient(os.getenv("MONGODB_URI"))
+db_mongo = mongo["sosengasgo"]
+respostas_col = db_mongo["respostas_emergencia"]
 
 #configurações
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -60,6 +65,11 @@ async def acionar_emergencia(request: Request, user=Depends(verify_firebase_toke
     lat = body.get("latitude", 0)
     lon = body.get("longitude", 0)
     email = user.get("email", "unknown user")
+    uid = user.get("uid", "unknown uid")
+    acionamento_id = body.get("acionamento_id", "unknown id")
+
+    # chave única: id_uid
+    chave = f"{acionamento_id}_{uid}"
 
     map_link = f"https://www.google.com/maps?q={lat},{lon}"
     agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -69,12 +79,26 @@ async def acionar_emergencia(request: Request, user=Depends(verify_firebase_toke
         f"Usuário: {email}\n"
         f"Data e Hora: {agora}\n"
         f"Localização: [Clique aqui]({map_link})"
+        f"Para confirmar que está a caminho, responda com: \n"
+        f"`/confirmar {chave}`\n"
     )
 
     await send_telegram_message(message)
 
     return {"status": "ok", "email": email, "latitude": lat, "longitude": lon, "timestamp": agora,
+            "chave": chave,
             "mensagem": "Mensagem enviada para o Telegram com sucesso."}
+
+# GET endpoint to confirm the emergency response
+@app.get("/api/emergencia/status/{chave}")
+async def confirmar_status(chave: str, user=Depends(verify_firebase_token)):
+    # Verifica se a chave existe no banco de dados
+    resposta = respostas_col.find_one({"chave": chave}, {"_id": 0})
+    if not resposta:
+        return {"confirmado": False, "status": "not_found", "mensagem": "Chave não encontrada."}
+
+    return {"confirmado": True, "status": "ok", "mensagem": "Status confirmado com sucesso.", "resposta": resposta.get("resposta"), "por": resposta.get("por")}
+
 
 # POST webhook endpoint to receive messages from Telegram
 @app.post("/telegram/webhook")
@@ -87,6 +111,7 @@ async def telegram_webhook(request: Request):
     
     chat_id = message["chat"]["id"]
     text = message["text"].strip()
+    nome = message.get("from", {}).get("first_name", "Responsável")
 
     if text.startswith("/start"):
         async with httpx.AsyncClient() as client:
@@ -95,6 +120,31 @@ async def telegram_webhook(request: Request):
                 "text": "Olá! Este bot está configurado para receber mensagens de emergência. SOSEngasgo API está funcionando corretamente.",
                 "parse_mode": "Markdown"
             })
+
+    # /confirmado {chave}
+    if text.startswith("/confirmado"):
+        partes = text.split(" ", 1)
+        if len(partes) == 2:
+            chave = partes[1].strip()
+
+            # Salva no MongoDB
+            respostas_col.update_one(
+                {"chave": chave},
+                {"$set": {
+                    "chave": chave,
+                    "resposta": f"{nome} está a caminho!",
+                    "por": nome,
+                    "timestamp": datetime.now().isoformat()
+                }},
+                upsert=True
+            )
+
+            # Confirma para o responsável no Telegram
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                    json={"chat_id": chat_id, "text": f"✅ Confirmado! {nome} está a caminho."}
+                )
 
     return {"ok": True}
 

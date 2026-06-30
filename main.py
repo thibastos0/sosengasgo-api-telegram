@@ -28,7 +28,7 @@ firebase_admin.initialize_app(cred)
 
 # MongoDB connection
 mongo = MongoClient(os.getenv("MONGODB_URI"))
-db_mongo = mongo["sosengasgo"]
+db_mongo = mongo["SOSEngasgo"]
 respostas_col = db_mongo["respostas_emergencia"]
 
 #configurações
@@ -80,7 +80,7 @@ async def acionar_emergencia(request: Request, user=Depends(verify_firebase_toke
         f"Data e Hora: {agora}\n"
         f"Localização: [Clique aqui]({map_link}). \n\n"
         f"Para confirmar que está a caminho, responda com: \n"
-        f"`/confirmar {chave}`\n"
+        f"`/confirmado {chave}`\n"
     )
 
     await send_telegram_message(message)

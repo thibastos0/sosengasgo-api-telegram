@@ -78,7 +78,7 @@ async def acionar_emergencia(request: Request, user=Depends(verify_firebase_toke
         f"🚨 *Emergência acionada!* 🚨\n\n"
         f"Usuário: {email}\n"
         f"Data e Hora: {agora}\n"
-        f"Localização: [Clique aqui]({map_link})"
+        f"Localização: [Clique aqui]({map_link}). \n\n"
         f"Para confirmar que está a caminho, responda com: \n"
         f"`/confirmar {chave}`\n"
     )

@@ -1,6 +1,6 @@
 # SOS Engasgo API - Telegram Integration
 
-API FastAPI que integra autenticação Firebase com notificações via Telegram. Projeto desenvolvido para comunicação segura com alertas em tempo real.
+API FastAPI que integra autenticação Firebase com notificações via Telegram e persistência em MongoDB. Projeto desenvolvido para comunicação segura com alertas em tempo real e armazenamento de dados.
 
 ## 📋 Descrição
 
@@ -8,6 +8,7 @@ Esta é uma API RESTful desenvolvida com **FastAPI** que oferece:
 
 - ✅ Autenticação segura com Firebase
 - ✅ Integração com Telegram Bot para envio de mensagens
+- ✅ Armazenamento de dados em MongoDB
 - ✅ Endpoints protegidos por tokens JWT
 - ✅ Pronto para deploy no Vercel
 - ✅ Variáveis de ambiente para configuração segura
@@ -16,6 +17,8 @@ Esta é uma API RESTful desenvolvida com **FastAPI** que oferece:
 
 - **FastAPI** - Framework web moderno para Python
 - **Firebase Admin SDK** - Autenticação e verificação de tokens
+- **MongoDB** - Banco de dados NoSQL
+- **Motor** - Driver assíncrono para MongoDB
 - **HTTPX** - Cliente HTTP assíncrono
 - **Uvicorn** - Servidor ASGI
 - **Python-dotenv** - Gerenciamento de variáveis de ambiente
@@ -26,6 +29,8 @@ Esta é uma API RESTful desenvolvida com **FastAPI** que oferece:
 - pip (gerenciador de pacotes Python)
 - Conta Firebase
 - Telegram Bot Token
+- MongoDB (local ou cloud - ex: MongoDB Atlas)
+- Connection String do MongoDB
 
 ## ⚙️ Configuração
 
@@ -65,9 +70,16 @@ FIREBASE_CREDENTIALS_BASE64=<sua_credencial_firebase_em_base64>
 TELEGRAM_BOT_TOKEN=<seu_telegram_bot_token>
 CHAT_ID_TELEGRAM=<seu_chat_id>
 TELEGRAM_WEBHOOK_URL=<url_do_webhook>
+
+# MongoDB
+MONGODB_URL=mongodb+srv://<usuario>:<senha>@cluster.mongodb.net/sosengasgo
+MONGODB_DATABASE=sosengasgo
 ```
 
-**Nota:** Se a variável `FIREBASE_CREDENTIALS_BASE64` não estiver configurada, a API tentará carregar o arquivo `firebase-service-account.json`.
+**Notas:**
+- Se `FIREBASE_CREDENTIALS_BASE64` não estiver configurada, a API tentará carregar o arquivo `firebase-service-account.json`
+- Para MongoDB local, use: `mongodb://localhost:27017/sosengasgo`
+- Para MongoDB Atlas, obtenha a connection string no dashboard da sua conta
 
 ### 5. Executar a API Localmente
 
@@ -100,6 +112,15 @@ async def send_telegram_message(message: str):
 
 As mensagens suportam formatação **Markdown**.
 
+### Armazenamento em MongoDB
+
+A API utiliza MongoDB para persistir dados de forma assíncrona:
+
+- Armazenamento de logs de eventos
+- Histórico de mensagens enviadas
+- Dados de usuários autenticados
+- Registros de operações
+
 ## 📁 Estrutura de Arquivos
 
 ```
@@ -124,6 +145,8 @@ Este projeto está configurado para deploy automático no Vercel.
    - `TELEGRAM_BOT_TOKEN`
    - `CHAT_ID_TELEGRAM`
    - `TELEGRAM_WEBHOOK_URL`
+   - `MONGODB_URL`
+   - `MONGODB_DATABASE`
 
 ### Fazer Deploy:
 
@@ -168,6 +191,12 @@ deactivate
 - Verifique o `TELEGRAM_BOT_TOKEN`
 - Confirme se o `CHAT_ID_TELEGRAM` está correto
 - Teste o bot manualmente no Telegram
+
+### Erro de Conexão com MongoDB
+- Verifique se o `MONGODB_URL` está correto
+- Confirme se a conexão de rede está disponível
+- Para MongoDB local, certifique-se de que o serviço está rodando
+- Para MongoDB Atlas, verifique as permissões de IP whitelist
 
 ### Erro de Importação
 - Certifique-se de que o ambiente virtual está ativado

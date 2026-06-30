@@ -72,7 +72,7 @@ CHAT_ID_TELEGRAM=<seu_chat_id>
 TELEGRAM_WEBHOOK_URL=<url_do_webhook>
 
 # MongoDB
-MONGODB_URL=mongodb+srv://<usuario>:<senha>@cluster.mongodb.net/sosengasgo
+MONGODB_URI=mongodb+srv://<usuario>:<senha>@cluster.mongodb.net/sosengasgo
 MONGODB_DATABASE=sosengasgo
 ```
 
@@ -90,6 +90,13 @@ uvicorn main:app --reload
 A API estará disponível em `http://localhost:8000`
 
 Acesse a documentação interativa em `http://localhost:8000/docs`
+
+## 🌍 Ambiente de Produção
+
+A API está publicada na Vercel em:
+
+- [https://sosengasgo-api-telegram.vercel.app](https://sosengasgo-api-telegram.vercel.app)
+- [https://sosengasgo-api-telegram.vercel.app/docs](https://sosengasgo-api-telegram.vercel.app/docs)
 
 ## 🔐 Autenticação
 
@@ -145,7 +152,7 @@ Este projeto está configurado para deploy automático no Vercel.
    - `TELEGRAM_BOT_TOKEN`
    - `CHAT_ID_TELEGRAM`
    - `TELEGRAM_WEBHOOK_URL`
-   - `MONGODB_URL`
+    - `MONGODB_URI`
    - `MONGODB_DATABASE`
 
 ### Fazer Deploy:
@@ -193,7 +200,7 @@ deactivate
 - Teste o bot manualmente no Telegram
 
 ### Erro de Conexão com MongoDB
-- Verifique se o `MONGODB_URL` está correto
+- Verifique se o `MONGODB_URI` está correto
 - Confirme se a conexão de rede está disponível
 - Para MongoDB local, certifique-se de que o serviço está rodando
 - Para MongoDB Atlas, verifique as permissões de IP whitelist
